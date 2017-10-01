@@ -1,0 +1,83 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id 'org.spongepowered.plugin' version '0.8.1'
+}
+
+apply plugin: 'java'
+apply plugin: 'maven'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+group = 'ca.shadownode.chatlink'
+description = "A basic example plugin to showcase using redis to link chats."
+version = 'S7.0-1.0'
+
+ext {
+    // Placeholders for configuration filtering
+    description = rootProject.description
+    author = 'ShadowKitten'
+
+    resourceTokens = [
+            'Name': rootProject.name,
+            'Description': description,
+            'Version': version,
+            'Author': author,
+            'Website': 'https://www.shadownode.ca'
+    ];
+
+    pluginClass = "${group}.ChatLink"
+    resourceTokens.PluginClass = pluginClass.toString()
+}
+
+sponge {
+    plugin {
+        id = 'chatlink'
+        meta {
+            name = rootProject.name
+            version = rootProject.version
+            authors = [rootProject.author]
+            description = rootProject.description
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.spongepowered:spongeapi:7.0.0-SNAPSHOT'
+    compile 'org.apache.commons:commons-pool2:2.4.2'
+    compile 'com.google.code.gson:gson:2.8.0'
+    compile 'redis.clients:jedis:2.9.0'
+}
+
+processResources {
+    include 'LICENSE'
+    filter org.apache.tools.ant.filters.ReplaceTokens, tokens: resourceTokens
+}
+
+shadowJar {
+    baseName = rootProject.name
+
+    dependencies {
+        include project(rootProject.path)
+        include dependency('com.google.code.gson:gson')
+        include dependency('redis.clients:jedis')
+        include dependency('org.apache.commons:commons-pool2')
+    }
+
+    exclude 'META-INF/services/**'
+    relocate 'com.google.code.gson', 'ca.shadownode.chatlink.lib.gson'
+    relocate 'redis.clients', 'ca.shadownode.chatlink.lib.jedis'
+    relocate 'org.apache.commons', 'ca.shadownode.chatlink.lib.apache'
+}
+
+artifacts {
+    archives shadowJar
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.14'
+}
